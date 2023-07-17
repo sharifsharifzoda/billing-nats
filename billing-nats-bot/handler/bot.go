@@ -4,6 +4,7 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/nats-io/nats.go"
+	"log"
 )
 
 const (
@@ -15,52 +16,15 @@ var ChatId []int64
 func (h *Handler) SendMessageToBot(msg *nats.Msg) {
 	fmt.Println(string(msg.Data))
 
-	//update := tgbotapi.NewUpdate(0)
-	//update.Timeout = 60
+	for _, id := range ChatId {
+		message := tgbotapi.NewMessage(id, string(msg.Data))
+		_, err := h.Bot.Send(message)
+		if err != nil {
+			log.Println("failed to send the message to Telegram. Error is: ", err.Error())
+			continue
+		}
+	}
 
-	//fmt.Println(string(msg.Data))
-	//updates, err := h.Bot.GetUpdatesChan(update)
-	//if err != nil {
-	//	h.Logger.Println("failed to get updates. Error is:", err.Error())
-	//	return
-	//}
-
-	//for update := range updates {
-	//	if strings.ToLower(update.Message.Text) == "/news" {
-	//		trId := fmt.Sprintf("Transaction #%v completed successfully", string(msg.Data))
-	//		fmt.Println("Received:", update.Message.Text, trId, "->", update.Message.From)
-	//
-	//		message := tgbotapi.NewMessage(update.Message.Chat.ID, trId)
-	//		_, err := h.Bot.Send(message)
-	//		if err != nil {
-	//			log.Println("failed to send the message to bot. Error is:", err.Error())
-	//			continue
-	//		}
-	//
-	//	}
-	//
-	//	if strings.ToLower(update.Message.Text) == "/start" {
-	//		ChatId = append(ChatId, update.Message.Chat.ID)
-	//		fmt.Println(update.Message.Chat.ID)
-	//	}
-	//
-	//	for _, id := range ChatId {
-	//		log.Println("sending...")
-	//		message := tgbotapi.NewMessage(id, string(msg.Data))
-	//		_, err := h.Bot.Send(message)
-	//		if err != nil {
-	//			log.Println("failed to send the message to bot. Error is:", err.Error())
-	//			continue
-	//		}
-	//	}
-	//
-	//}
-
-	//message := tgbotapi.NewMessage(1238370443, string(msg.Data))
-	//_, err := h.Bot.Send(message)
-	//if err != nil {
-	//	log.Println("failed to send the message to bot. Error is:", err.Error())
-	//}
 }
 
 func (h *Handler) handleCommand(message *tgbotapi.Message) error {
@@ -73,12 +37,14 @@ func (h *Handler) handleCommand(message *tgbotapi.Message) error {
 }
 
 func (h *Handler) handleStartCommand(message *tgbotapi.Message) error {
+	ChatId = append(ChatId, message.Chat.ID)
+	fmt.Println(ChatId)
 	msg := tgbotapi.NewMessage(message.Chat.ID, "Already authorized")
 	_, err := h.Bot.Send(msg)
 	return err
 }
 
-func (h *Handler) handleMessage(message *tgbotapi.Message, ch chan *nats.Msg) error {
+func (h *Handler) handleMessage(message *tgbotapi.Message) error {
 	//for sub.IsValid() {
 	//	m, err := sub.NextMsg(10 * time.Second)
 	//	if err != nil {
@@ -95,14 +61,13 @@ func (h *Handler) handleMessage(message *tgbotapi.Message, ch chan *nats.Msg) er
 	//
 	//return nil
 
-	for msg := range ch {
-		newMessage := tgbotapi.NewMessage(message.Chat.ID, string(msg.Data))
-		_, err := h.Bot.Send(newMessage)
-		if err != nil {
-			return err
-		}
-	}
-
+	//for msg := range ch {
+	//	newMessage := tgbotapi.NewMessage(message.Chat.ID, string(msg.Data))
+	//	_, err := h.Bot.Send(newMessage)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
 	return nil
 }
 

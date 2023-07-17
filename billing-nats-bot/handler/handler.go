@@ -21,13 +21,19 @@ func NewHandler(nats *nats.Conn, bot *tgbotapi.BotAPI, log *log.Logger) *Handler
 }
 
 func (h *Handler) Init() {
-	msgChan := make(chan *nats.Msg, 5)
+	//msgChan := make(chan *nats.Msg, 5)
 
-	sub, err := h.Nats.ChanSubscribe("bot.*", msgChan)
+	sub, err := h.Nats.Subscribe("bot.*", h.SendMessageToBot)
 	if err != nil {
-		log.Fatalf("can't subscribe to the subject. Error is: %s", err.Error())
+		log.Fatal("failed to subscribe to the subject. Error is: ", err.Error())
 	}
 	defer sub.Unsubscribe()
+
+	//sub, err := h.Nats.ChanSubscribe("bot.*", msgChan)
+	//if err != nil {
+	//	log.Fatalf("can't subscribe to the subject. Error is: %s", err.Error())
+	//}
+	//defer sub.Unsubscribe()
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -50,7 +56,7 @@ func (h *Handler) Init() {
 			continue
 		}
 
-		if err := h.handleMessage(update.Message, msgChan); err != nil {
+		if err := h.handleMessage(update.Message); err != nil {
 			h.handleError(update.Message.Chat.ID, err)
 		}
 	}
