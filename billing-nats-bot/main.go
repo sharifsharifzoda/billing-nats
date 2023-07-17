@@ -29,7 +29,7 @@ func main() {
 
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TOKEN"))
 	if err != nil {
-		log.Fatal("failed to creates a new BotAPI. Error is: ", err.Error())
+		log.Fatal("failed to create a new BotAPI. Error is: ", err.Error())
 	}
 
 	newHandler := handler.NewHandler(conn, bot, l)
